@@ -17,4 +17,18 @@ final class DependencyContainer {
         discoverViewController.view.backgroundColor = .systemBackground
         return discoverViewController
     }
+    
+    func makeLibraryViewController() -> UIViewController {
+        let libraryViewController = LibraryViewController()
+        libraryViewController.title = "Library"
+        libraryViewController.view.backgroundColor = .systemBackground
+        return libraryViewController
+    }
+    
+    func makeStatisticsViewController() -> UIViewController {
+        let statisticsViewController = StatisticsViewController()
+        statisticsViewController.title = "Statistics"
+        statisticsViewController.view.backgroundColor = .systemBackground
+        return statisticsViewController
+    }
 }
