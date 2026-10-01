@@ -8,7 +8,16 @@
 import UIKit
 
 final class ImageLoader: ImageLoaderProtocol {
+    private var cache: [String: UIImage]
+    
+    init(cache: [String : UIImage]) {
+        self.cache = cache
+    }
+    
     func loadImageFrom(url: URL) async throws -> UIImage {
+        if let cachedImage = cache[url.absoluteString] {
+            return cachedImage
+        }
         
         let (data, response) = try await URLSession.shared.data(from: url)
         
@@ -20,10 +29,10 @@ final class ImageLoader: ImageLoaderProtocol {
             throw NetworkError.badStatusCode(httpResposnse.statusCode)
         }
         
-        guard let image = UIImage(data: data) else {
+        guard let loadedImage = UIImage(data: data) else {
             throw NetworkError.invalidResponse
         }
-        
-        return image
+        cache[url.absoluteString] = loadedImage
+        return loadedImage
     }
 }

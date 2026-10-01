@@ -11,7 +11,7 @@ final class DependencyContainer {
     private let apiClient: APIClientProtocol
     private let openLibraryService: OpenLibraryServiceProtocol
     private let booksRepository: BooksRepositoryProtocol
-    private let imageloader: ImageLoaderProtocol
+    private let imageLoader: ImageLoaderProtocol
     
     init() {
         guard let baseURL = URL(string: "https://openlibrary.org") else {
@@ -20,18 +20,19 @@ final class DependencyContainer {
         let apiClient = APIClient(baseURL: baseURL)
         let service = OpenLibraryService(apiClient: apiClient)
         let repository = BooksRepository(openLibraryService: service)
-        let imageLoader = ImageLoader()
+        let cache: [String: UIImage] = [:]
+        let imageLoader = ImageLoader(cache: cache)
         
         self.apiClient = apiClient
         self.openLibraryService = service
         self.booksRepository = repository
-        self.imageloader = imageLoader
+        self.imageLoader = imageLoader
     }
     
     func makeDiscoverViewController() -> UIViewController {
         let discoverViewModel = DiscoverViewModel(booksRepository: booksRepository)
         let discoverViewController = DiscoverViewController(
-            discoverViewModel: discoverViewModel, imageLoader: imageloader
+            discoverViewModel: discoverViewModel, imageLoader: imageLoader
         )
         discoverViewController.title = "Discover"
         discoverViewController.view.backgroundColor = .systemBackground

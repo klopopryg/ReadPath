@@ -20,6 +20,7 @@ class DiscoverViewController: UIViewController {
         collectionView.backgroundColor = .systemBackground
         return collectionView
     }()
+    private var isLoadingMore = false
     private let searchController = UISearchController()
     private let activityIndicator = UIActivityIndicatorView()
     private let emptyLabel = UILabel()
@@ -54,7 +55,15 @@ class DiscoverViewController: UIViewController {
         ])
         collectionView.dataSource = self
         collectionView.delegate = self
-        collectionView.register(BookCell.self, forCellWithReuseIdentifier: BookCell.reuseIdentifier)
+        collectionView.register(
+            BookCell.self,
+            forCellWithReuseIdentifier: BookCell.reuseIdentifier
+        )
+        collectionView.register(
+            LoadingFooterView.self,
+            forSupplementaryViewOfKind: UICollectionView.elementKindSectionFooter,
+            withReuseIdentifier: LoadingFooterView.reusableIdentifier
+        )
     }
     
     private func setupNavigation() {
@@ -83,8 +92,23 @@ class DiscoverViewController: UIViewController {
         emptyLabel.isHidden = true
     }
     
-    private func showErrorAlertWith(massage: String) {
-        let alert = UIAlertController(title: "Loading Error", message: massage, preferredStyle: .alert)
+    private func showLoadingErrorAlertWith(message: String) {
+        let alert = UIAlertController(
+            title: "Loading Error",
+            message: message,
+            preferredStyle: .alert
+        )
+        let action = UIAlertAction(title: "Ok", style: .default)
+        alert.addAction(action)
+        present(alert, animated: true)
+    }
+    
+    private func showNextPageErrorAlert(massage: String) {
+        let alert = UIAlertController(
+            title: "Loading next page error",
+            message: massage,
+            preferredStyle: .alert
+        )
         let action = UIAlertAction(title: "Ok", style: .default)
         alert.addAction(action)
         present(alert, animated: true)
@@ -103,13 +127,13 @@ class DiscoverViewController: UIViewController {
         case .loading:
             emptyLabel.isHidden = true
             activityIndicator.startAnimating()
-            collectionView.isHidden = false
-            searchController.searchBar.isHidden = false
+            collectionView.isHidden = true
         case .loaded:
             emptyLabel.isHidden = true
             activityIndicator.stopAnimating()
             collectionView.isHidden = false
             searchController.searchBar.isHidden = false
+            isLoadingMore = false
             collectionView.reloadData()
         case .empty(let query):
             activityIndicator.stopAnimating()
@@ -117,35 +141,119 @@ class DiscoverViewController: UIViewController {
             emptyLabel.isHidden = false
             emptyLabel.text = "No books found \(query)"
         case .loadingMore:
-            break
-        case .error(let massage):
+            isLoadingMore = true
+            collectionView.collectionViewLayout.invalidateLayout()
+        case .loadingError(let message):
             collectionView.isHidden = true
+            isLoadingMore = false
             activityIndicator.stopAnimating()
-            showErrorAlertWith(massage: massage)
+            showLoadingErrorAlertWith(message: message)
+        case .nextPageError(let massage):
+            isLoadingMore = false
+            collectionView.collectionViewLayout.invalidateLayout()
+            collectionView.isHidden = false
+            showNextPageErrorAlert(massage: massage)
+        case .loadedNextPage(let range):
+            let indexPaths = range.map {
+                IndexPath(item: $0, section: 0)
+            }
+            isLoadingMore = false
+            collectionView.insertItems(at: indexPaths)
+            collectionView.collectionViewLayout.invalidateLayout()
         }
     }
 }
 
 extension DiscoverViewController: UICollectionViewDataSource {
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+    func collectionView(
+        _ collectionView: UICollectionView,
+        numberOfItemsInSection section: Int
+    ) -> Int {
         discoverViewModel.getBooksCount()
     }
     
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+    func collectionView(
+        _ collectionView: UICollectionView,
+        cellForItemAt indexPath: IndexPath
+    ) -> UICollectionViewCell {
         guard let cell = collectionView.dequeueReusableCell(
             withReuseIdentifier: BookCell.reuseIdentifier, for: indexPath
         ) as? BookCell else {
             return UICollectionViewCell()
         }
         let currentBook = discoverViewModel.books[indexPath.row]
-        cell.configureWith(book: currentBook, and: imageLoader)
+        cell.configure(book: currentBook, imageLoader: imageLoader)
         return cell
+    }
+    
+    func collectionView(
+        _ collectionView: UICollectionView,
+        viewForSupplementaryElementOfKind kind: String,
+        at indexPath: IndexPath
+    ) -> UICollectionReusableView {
+        guard let footer = collectionView.dequeueReusableSupplementaryView(
+            ofKind: kind,
+            withReuseIdentifier: LoadingFooterView.reusableIdentifier,
+            for: indexPath
+        ) as? LoadingFooterView else { return UICollectionReusableView() }
+        
+        if isLoadingMore {
+            footer.startAnimating()
+        } else {
+            footer.stopAnimating()
+        }
+        return footer
     }
 }
 
-extension DiscoverViewController: UICollectionViewDelegate {
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+extension DiscoverViewController: UICollectionViewDelegateFlowLayout {
+    func collectionView(
+        _ collectionView: UICollectionView,
+        didSelectItemAt indexPath: IndexPath
+    ) {
         
+    }
+    
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        let contentHeight = scrollView.contentSize.height
+        let visibleHeight = scrollView.frame.height
+        let offsetY = scrollView.contentOffset.y
+        let distanceFromBottom = contentHeight - visibleHeight - offsetY
+        
+        if distanceFromBottom < 300 {
+            discoverViewModel.loadNextPage()
+        }
+    }
+    
+    func collectionView(
+        _ collectionView: UICollectionView,
+        layout collectionViewLayout: UICollectionViewLayout,
+        sizeForItemAt indexPath: IndexPath
+    ) -> CGSize {
+        guard let layout = collectionViewLayout as? UICollectionViewFlowLayout else {
+            return .zero
+        }
+        let columns: CGFloat = 2
+        let leftInset = layout.sectionInset.left
+        let rightInset = layout.sectionInset.right
+        let horizontalInsets = leftInset + rightInset
+        let spacingBetweenCells = layout.minimumInteritemSpacing * (columns - 1)
+        let availableWidth = collectionView.bounds.width - horizontalInsets - spacingBetweenCells
+        let itemWidth = availableWidth / columns
+        let itemHeight = itemWidth * 1.5
+        return CGSize(width: itemWidth, height: itemHeight)
+    }
+    
+    func collectionView(
+        _ collectionView: UICollectionView,
+        layout collectionViewLayout: UICollectionViewLayout,
+        referenceSizeForFooterInSection section: Int
+    ) -> CGSize {
+        if isLoadingMore {
+            return CGSize(width: collectionView.bounds.width, height: 50)
+        } else {
+            return .zero
+        }
     }
 }
 
@@ -156,4 +264,3 @@ extension DiscoverViewController: UISearchBarDelegate {
         searchBar.resignFirstResponder()
     }
 }
-

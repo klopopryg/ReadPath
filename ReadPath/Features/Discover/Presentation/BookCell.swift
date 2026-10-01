@@ -9,7 +9,7 @@ import UIKit
 
 final class BookCell: UICollectionViewCell {
     private let imageView = UIImageView()
-    private var task: Task<Void, Never>?
+    private var imageLoadingTask: Task<Void, Never>?
     static let reuseIdentifier = "bookCell"
     
     override init(frame: CGRect) {
@@ -30,11 +30,15 @@ final class BookCell: UICollectionViewCell {
             imageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
             imageView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
         ])
+        imageView.contentMode = .scaleAspectFill
+        imageView.clipsToBounds = true
+        imageView.backgroundColor = .secondarySystemBackground
     }
     
-    func configureWith(book: Book, and imageLoader: ImageLoaderProtocol) {
-        task?.cancel()
-         task = Task {
+    func configure(book: Book, imageLoader: ImageLoaderProtocol) {
+        imageView.image = UIImage(systemName: "text.book.closed")
+        imageLoadingTask?.cancel()
+         imageLoadingTask = Task {
             do {
                 if let url = book.coverURL {
                     let image = try await imageLoader.loadImageFrom(url: url)
@@ -45,15 +49,14 @@ final class BookCell: UICollectionViewCell {
                 }
             } catch {
                 guard !Task.isCancelled else { return }
-                imageView.image = UIImage(systemName: "text.book.closed")
             }
         }
     }
     
     override func prepareForReuse() {
         super.prepareForReuse()
-        task?.cancel()
-        task = nil
+        imageLoadingTask?.cancel()
+        imageLoadingTask = nil
         imageView.image = nil
     }
 }

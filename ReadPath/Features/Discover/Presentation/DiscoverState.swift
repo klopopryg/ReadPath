@@ -11,5 +11,7 @@ enum DiscoverState {
     case loaded
     case empty(String)
     case loadingMore
-    case error(String)
+    case loadingError(String)
+    case nextPageError(String)
+    case loadedNextPage(Range<Int>)
 }
