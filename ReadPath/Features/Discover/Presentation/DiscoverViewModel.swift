@@ -94,4 +94,8 @@ final class DiscoverViewModel {
     func getBooksCount() -> Int {
         books.count
     }
+    
+    func getBookAt(index: Int) -> Book {
+        books[index]
+    }
 }

@@ -34,18 +34,29 @@ final class AppCoordinator {
     private func makeDiscoverNavigationController() -> UINavigationController {
         let discoverViewController = dependencyContainer.makeDiscoverViewController()
         let navigationController = UINavigationController(rootViewController: discoverViewController)
+        navigationController.navigationBar.prefersLargeTitles = true
+        discoverViewController.onBookSelected = { [weak self] key in
+            self?.showDetails(key: key, navigationControoler: navigationController)
+        }
         return navigationController
     }
     
     private func makeLibraryNavigationController() -> UINavigationController {
         let libraryViewController = dependencyContainer.makeLibraryViewController()
         let navigationController = UINavigationController(rootViewController: libraryViewController)
+        navigationController.navigationBar.prefersLargeTitles = true
         return navigationController
     }
     
     private func makeStatisticsNavigationController() -> UINavigationController {
         let statisticsViewController = dependencyContainer.makeStatisticsViewController()
         let navigationController = UINavigationController(rootViewController: statisticsViewController)
+        navigationController.navigationBar.prefersLargeTitles = true
         return navigationController
+    }
+    
+    private func showDetails(key: String, navigationControoler: UINavigationController) {
+        let detailsViewController = dependencyContainer.makeDetailsViewController(key: key)
+        navigationControoler.pushViewController(detailsViewController, animated: true)
     }
 }

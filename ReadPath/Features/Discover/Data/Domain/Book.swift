@@ -26,18 +26,14 @@ extension BooksPage {
     }
 }
 
-func makeCoverURL(coverID: Int?) -> URL? {
-    guard let coverID else { return nil }
-    let url = URL(string: "https://covers.openlibrary.org/b/id/\(coverID)-M.jpg")
-    return url
-}
-
 extension Book {
     init(dto: BookDTO) {
         self.init(
             authorName: dto.authorName,
             firstPublishYear: dto.firstPublishYear,
-            coverURL: makeCoverURL(coverID: dto.coverID),
+            coverURL: CoverURLBuilder.makeCoverURL(
+                coverID: dto.coverID, size: CoverSize.meduim
+            ),
             key: dto.key,
             title: dto.title
         )

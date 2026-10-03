@@ -20,10 +20,11 @@ class DiscoverViewController: UIViewController {
         collectionView.backgroundColor = .systemBackground
         return collectionView
     }()
-    private var isLoadingMore = false
     private let searchController = UISearchController()
     private let activityIndicator = UIActivityIndicatorView()
     private let emptyLabel = UILabel()
+    private var isLoadingMore = false
+    var onBookSelected: ((String) -> Void)?
     
     init(discoverViewModel: DiscoverViewModel, imageLoader: ImageLoaderProtocol) {
         self.discoverViewModel = discoverViewModel
@@ -37,6 +38,7 @@ class DiscoverViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        navigationItem.largeTitleDisplayMode = .always
         setupCollectionView()
         setupNavigation()
         setupActivityIndicator()
@@ -211,7 +213,9 @@ extension DiscoverViewController: UICollectionViewDelegateFlowLayout {
         _ collectionView: UICollectionView,
         didSelectItemAt indexPath: IndexPath
     ) {
-        
+        let currentBook = discoverViewModel.getBookAt(index: indexPath.item)
+        let currentBookId = currentBook.key
+        onBookSelected?(currentBookId)
     }
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
