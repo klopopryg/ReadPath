@@ -23,6 +23,12 @@ final class LibraryViewModel {
         libraryStore.getBookAtIndex(index)
     }
     
+    func getBookIndexAtKey(_ key: String) -> Int? {
+        libraryStore.savedBooks.firstIndex { savedBook in
+            savedBook.key == key
+        }
+    }
+    
     func loadBooks() {
         do {
             try libraryStore.loadBooks()
@@ -40,6 +46,15 @@ final class LibraryViewModel {
         } catch {
             onStateChanged?(.error(error.localizedDescription))
             return false
+        }
+    }
+    
+    func changeStatus(key: String, status: ReadingStatus) {
+        do {
+            try libraryStore.changeStatus(key: key, status: status)
+            onStateChanged?(.changed(key: key))
+        } catch {
+            onStateChanged?(.error(error.localizedDescription))
         }
     }
 }

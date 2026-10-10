@@ -32,7 +32,7 @@ extension Book {
             authorName: dto.authorName,
             firstPublishYear: dto.firstPublishYear,
             coverURL: CoverURLBuilder.makeCoverURL(
-                coverID: dto.coverID, size: CoverSize.meduim
+                coverID: dto.coverID, size: CoverSize.medium
             ),
             key: dto.key,
             title: dto.title

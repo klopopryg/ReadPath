@@ -15,6 +15,7 @@ final class SavedBookCell: UITableViewCell {
     private let horizontalStackView = UIStackView()
     private let savedBookImageView = UIImageView()
     private var loadTask: Task<Void, Never>?
+    private var currentCoverURL: URL?
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -69,21 +70,39 @@ final class SavedBookCell: UITableViewCell {
         ])
     }
     
+    private func chooseStatusTextColor(_ status: ReadingStatus) {
+        switch status {
+        case .wantToRead:
+            statusLabel.textColor = .secondaryLabel
+        case .reading:
+            statusLabel.textColor = .systemBlue
+        case .completed:
+            statusLabel.textColor = .systemGreen
+        }
+    }
+    
     func configure(with savedBook: SavedBook, imageLoader: ImageLoaderProtocol) {
         titleLabel.text = savedBook.title
         statusLabel.text = savedBook.status.rawValue
+        chooseStatusTextColor(savedBook.status)
+        let url = CoverURLBuilder.makeCoverURL(coverID: savedBook.coverID, size: .medium)
+        guard currentCoverURL != url else { return }
         loadTask?.cancel()
+        loadTask = nil
+        currentCoverURL = url
         savedBookImageView.image = UIImage(systemName: "text.book.closed")
-        guard let url = CoverURLBuilder.makeCoverURL(coverID: savedBook.coverID, size: .meduim) else {
-            return
-        }
+        guard let url else { return }
         loadTask = Task { [weak self] in
             do {
                 let loadedImage = try await imageLoader.loadImageFrom(url: url)
                 guard !Task.isCancelled else { return }
-                guard let self else { return }
+                guard let self, currentCoverURL == url else { return }
                 savedBookImageView.image = loadedImage
             } catch {
+                guard !Task.isCancelled else { return }
+                guard let self, currentCoverURL == url else { return }
+                currentCoverURL = nil
+                loadTask = nil
             }
         }
     }
@@ -95,6 +114,7 @@ final class SavedBookCell: UITableViewCell {
         savedBookImageView.image = UIImage(systemName: "text.book.closed")
         loadTask?.cancel()
         loadTask = nil
+        currentCoverURL = nil
     }
 
 }

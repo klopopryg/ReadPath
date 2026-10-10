@@ -7,5 +7,6 @@
 
 enum SavedBookState {
     case loaded
+    case changed(key: String)
     case error(String)
 }

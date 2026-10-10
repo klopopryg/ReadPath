@@ -55,6 +55,40 @@ final class LibraryViewController: UIViewController {
         present(alert, animated: true)
     }
     
+    private func showStatusSelection(book: SavedBook, indexPath: IndexPath) {
+        let alert = UIAlertController(title: "Change reading status", message: nil, preferredStyle: .actionSheet)
+        let wantToRead = UIAlertAction(title: book.status == .wantToRead ? "Want to read (Current)" : "Want to read", style: .default) { [weak self] _ in
+            guard let self else { return }
+            libraryViewModel.changeStatus(key: book.key, status: .wantToRead)
+        }
+        let reading = UIAlertAction(title: book.status == .reading ? "Reading (Current)" : "Reading", style: .default) { [weak self] _ in
+            guard let self else { return }
+            libraryViewModel.changeStatus(key: book.key, status: .reading)
+        }
+        let completed = UIAlertAction(title: book.status == .completed ? "Completed (Current)" : "Completed", style: .default) { [weak self] _ in
+            guard let self else { return }
+            libraryViewModel.changeStatus(key: book.key, status: .completed)
+        }
+        wantToRead.isEnabled = book.status != .wantToRead
+        reading.isEnabled = book.status != .reading
+        completed.isEnabled = book.status != .completed
+        
+        alert.addAction(wantToRead)
+        alert.addAction(reading)
+        alert.addAction(completed)
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        
+        if let popover = alert.popoverPresentationController {
+            popover.sourceView = tableView
+            popover.sourceRect = tableView.rectForRow(at: indexPath)
+        }
+        present(alert, animated: true)
+    }
+    
+    private func getBookIndexAt(key: String) -> Int? {
+        libraryViewModel.getBookIndexAtKey(key)
+    }
+    
     private func bindViewModel() {
         libraryViewModel.onStateChanged = { [weak self] state in
             self?.handleState(state: state)
@@ -65,6 +99,10 @@ final class LibraryViewController: UIViewController {
         switch state {
         case .loaded:
             tableView.reloadData()
+        case .changed(key: let key):
+            guard let index = getBookIndexAt(key: key) else { return }
+            let indexPath = IndexPath(row: index, section: 0)
+            tableView.reloadRows(at: [indexPath], with: .none)
         case .error(let message):
             showErrorAlert(message: message)
         }
@@ -96,7 +134,8 @@ extension LibraryViewController: UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-        let currentBookKey = libraryViewModel.getBookAtIndex(indexPath.row).key
+        let currentBook = libraryViewModel.getBookAtIndex(indexPath.row)
+        let currentBookKey = currentBook.key
         let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { [weak self] _, _, completionHandler in
             guard let self else {
                 completionHandler(false)
@@ -105,6 +144,15 @@ extension LibraryViewController: UITableViewDelegate {
             let deleted = libraryViewModel.deleteBook(key: currentBookKey)
             completionHandler(deleted)
         }
-        return UISwipeActionsConfiguration(actions: [deleteAction])
+        let statusAction = UIContextualAction(style: .normal, title: "Change status") { [weak self] _, _, completionHandler in
+            guard let self else {
+                completionHandler(false)
+                return
+            }
+            showStatusSelection(book: currentBook, indexPath: indexPath)
+            completionHandler(true)
+        }
+        statusAction.backgroundColor = .systemBlue
+        return UISwipeActionsConfiguration(actions: [statusAction, deleteAction])
     }
 }

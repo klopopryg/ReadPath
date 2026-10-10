@@ -9,7 +9,7 @@ import Foundation
 
 enum CoverSize: String {
     case small = "S"
-    case meduim = "M"
+    case medium = "M"
     case large = "L"
 }
 
