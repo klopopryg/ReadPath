@@ -45,6 +45,9 @@ final class AppCoordinator {
         let libraryViewController = dependencyContainer.makeLibraryViewController()
         let navigationController = UINavigationController(rootViewController: libraryViewController)
         navigationController.navigationBar.prefersLargeTitles = true
+        libraryViewController.onBookSelected = { [weak self] key in
+            self?.showDetails(key: key, navigationControoler: navigationController)
+        }
         return navigationController
     }
     

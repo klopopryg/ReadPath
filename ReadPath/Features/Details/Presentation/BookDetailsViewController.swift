@@ -17,6 +17,7 @@ final class BookDetailsViewController: UIViewController {
     private let titleLabel = UILabel()
     private let descriptionLabel = UILabel()
     private let subjectsLabel = UILabel()
+    private let libraryActionButton = UIButton()
     private var stackView = UIStackView()
     private var loadTask: Task<Void, Never>?
     
@@ -36,6 +37,7 @@ final class BookDetailsViewController: UIViewController {
         addSubViews()
         setupConstraints()
         setupAppearance()
+        addActions()
         bindViewModel()
         bookDetailsViewModel.loadDetails()
     }
@@ -48,6 +50,7 @@ final class BookDetailsViewController: UIViewController {
         stackView.addArrangedSubview(titleLabel)
         stackView.addArrangedSubview(descriptionLabel)
         stackView.addArrangedSubview(subjectsLabel)
+        stackView.addArrangedSubview(libraryActionButton)
     }
     
     private func setupConstraints() {
@@ -94,6 +97,25 @@ final class BookDetailsViewController: UIViewController {
         titleLabel.font = .systemFont(ofSize: 21, weight: .bold)
         descriptionLabel.numberOfLines = 0
         subjectsLabel.numberOfLines = 0
+        
+        var configuration = UIButton.Configuration.filled()
+        configuration.cornerStyle = .medium
+        configuration.contentInsets = NSDirectionalEdgeInsets(
+            top: 12,
+            leading: 16,
+            bottom: 12,
+            trailing: 16
+        )
+        libraryActionButton.configuration = configuration
+        libraryActionButton.isEnabled = false
+    }
+    
+    private func addActions() {
+        libraryActionButton.addTarget(self, action: #selector(buttonTapped), for: .touchUpInside)
+    }
+    
+    @objc private func buttonTapped() {
+        bookDetailsViewModel.toggleLibraryMemberShip()
     }
     
     private func showErrorAlert(massage: String) {
@@ -120,6 +142,14 @@ final class BookDetailsViewController: UIViewController {
         }
     }
     
+    private func updateLibraryButton(isInLibrary: Bool) {
+        libraryActionButton.configuration?.title = isInLibrary
+        ? "Remove from library"
+        : "Add to library"
+        
+        libraryActionButton.isEnabled = true
+    }
+    
     func configureWith(details : BookDetails) {
         loadCover(from: details.coverURL)
         titleLabel.text = details.title
@@ -131,21 +161,37 @@ final class BookDetailsViewController: UIViewController {
         bookDetailsViewModel.onStateChanged = { [weak self] state in
             self?.handleState(state: state)
         }
+        
+        bookDetailsViewModel.onLibraryAction = { [weak self] action in
+            self?.handleLibraryAction(action)
+        }
     }
     
     private func handleState(state: DetailsState) {
         switch state {
         case .loading:
+            libraryActionButton.isHidden = true
             imageView.isHidden = true
             activityIndicator.startAnimating()
         case .loaded(let details):
+            libraryActionButton.isHidden = false
             activityIndicator.stopAnimating()
             imageView.isHidden = false
             configureWith(details: details)
         case .error(let message):
             activityIndicator.stopAnimating()
             imageView.isHidden = true
+            libraryActionButton.isHidden = true
             showErrorAlert(massage: message)
+        }
+    }
+    
+    private func handleLibraryAction(_ action: LibraryActionResult) {
+        switch action {
+        case .memberShipChanged(isInLibrary: let isInLibrary):
+            updateLibraryButton(isInLibrary: isInLibrary)
+        case .error(let massage):
+            showErrorAlert(massage: massage)
         }
     }
     

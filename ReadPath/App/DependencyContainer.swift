@@ -14,6 +14,8 @@ final class DependencyContainer {
     private let booksRepository: BooksRepositoryProtocol
     private let bookDetailsRepository: BookDetailsRepositoryProtocol
     private let imageLoader: ImageLoaderProtocol
+    private let libraryStorage: CoreDataLibraryStorageProtocol
+    private let libraryStore: LibraryStoreProtocol
     
     init() {
         guard let baseURL = URL(string: "https://openlibrary.org") else {
@@ -26,6 +28,9 @@ final class DependencyContainer {
         let bookDetailsRepository = BookDetailsRepository(service: bookDetailsService)
         let cache: [String: UIImage] = [:]
         let imageLoader = ImageLoader(cache: cache)
+        let coreDataStack = CoreDataStack()
+        let libraryStorage = CoreDataLibraryStorage(context: coreDataStack.context)
+        let libraryStore = LibraryStore(libraryStorage: libraryStorage)
         
         self.apiClient = apiClient
         self.openLibraryService = openLibraryService
@@ -33,6 +38,8 @@ final class DependencyContainer {
         self.booksRepository = booksRepository
         self.bookDetailsRepository = bookDetailsRepository
         self.imageLoader = imageLoader
+        self.libraryStorage = libraryStorage
+        self.libraryStore = libraryStore
     }
     
     func makeDiscoverViewController() -> DiscoverViewController {
@@ -47,14 +54,19 @@ final class DependencyContainer {
     }
     
     func makeLibraryViewController() -> LibraryViewController {
-        let libraryViewController = LibraryViewController()
+        let libraryViewModel = LibraryViewModel(libraryStore: libraryStore)
+        let libraryViewController = LibraryViewController(libraryViewModel: libraryViewModel, imageLoader: imageLoader)
         libraryViewController.title = "Library"
         libraryViewController.view.backgroundColor = .systemBackground
         return libraryViewController
     }
     
     func makeDetailsViewController(key: String) -> BookDetailsViewController {
-        let bookDetailsViewModel = BookDetailsViewModel(repository: bookDetailsRepository, key: key)
+        let bookDetailsViewModel = BookDetailsViewModel(
+            repository: bookDetailsRepository,
+            key: key,
+            libraryStore: libraryStore
+        )
         let bookDetailsViewController = BookDetailsViewController(
             bookDetailsViewModel: bookDetailsViewModel,
             imageLoader: imageLoader
