@@ -9,8 +9,11 @@ import UIKit
 
 final class LibraryViewController: UIViewController {
     private let libraryViewModel: LibraryViewModel
-    private let tableView = UITableView()
     private let imageLoader: ImageLoaderProtocol
+    private let tableView = UITableView()
+    private let segmentedControl = UISegmentedControl(
+        items: ["All", "Want to read", "Reading", "Completed"]
+    )
     var onBookSelected: ((String) -> Void)?
     
     init(libraryViewModel: LibraryViewModel, imageLoader: ImageLoaderProtocol) {
@@ -25,6 +28,7 @@ final class LibraryViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupSegmentedControl()
         setupTableView()
         bindViewModel()
     }
@@ -38,7 +42,7 @@ final class LibraryViewController: UIViewController {
         view.addSubview(tableView)
         tableView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: view.topAnchor),
+            tableView.topAnchor.constraint(equalTo: segmentedControl.bottomAnchor, constant: 16),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
@@ -46,6 +50,35 @@ final class LibraryViewController: UIViewController {
         tableView.dataSource = self
         tableView.delegate = self
         tableView.register(SavedBookCell.self, forCellReuseIdentifier: SavedBookCell.reuseIdentifier)
+    }
+    
+    private func setupSegmentedControl() {
+        view.addSubview(segmentedControl)
+        segmentedControl.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            segmentedControl.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
+            segmentedControl.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
+            segmentedControl.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -8),
+        ])
+        segmentedControl.selectedSegmentIndex = 0
+        segmentedControl.addTarget(self, action: #selector(filterChanged), for: .valueChanged)
+    }
+    
+    @objc private func filterChanged(_ sender: UISegmentedControl) {
+        let filter: LibraryFilter
+        switch sender.selectedSegmentIndex {
+        case 0:
+            filter = .all
+        case 1:
+            filter = .wantToRead
+        case 2:
+            filter = .reading
+        case 3:
+            filter = .completed
+        default:
+            return
+        }
+        libraryViewModel.setFilter(filter)
     }
     
     private func showErrorAlert(message: String) {
@@ -111,7 +144,7 @@ final class LibraryViewController: UIViewController {
 
 extension LibraryViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        libraryViewModel.getSavedBooksCount()
+        libraryViewModel.displayedBooks.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -120,7 +153,7 @@ extension LibraryViewController: UITableViewDataSource {
         else {
             return UITableViewCell()
         }
-        let currentBook = libraryViewModel.getBookAtIndex(indexPath.row)
+        let currentBook = libraryViewModel.displayedBooks[indexPath.row]
         cell.configure(with: currentBook, imageLoader: imageLoader)
         return cell
     }
@@ -128,13 +161,13 @@ extension LibraryViewController: UITableViewDataSource {
 
 extension LibraryViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let currentKey = libraryViewModel.getBookAtIndex(indexPath.row).key
+        let currentKey = libraryViewModel.displayedBooks[indexPath.row].key
         onBookSelected?(currentKey)
         tableView.deselectRow(at: indexPath, animated: true)
     }
     
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-        let currentBook = libraryViewModel.getBookAtIndex(indexPath.row)
+        let currentBook = libraryViewModel.displayedBooks[indexPath.row]
         let currentBookKey = currentBook.key
         let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { [weak self] _, _, completionHandler in
             guard let self else {
