@@ -14,6 +14,7 @@ final class LibraryViewController: UIViewController {
     private let segmentedControl = UISegmentedControl(
         items: ["All", "Want to read", "Reading", "Completed"]
     )
+    private let emptyStateLabel = UILabel()
     var onBookSelected: ((String) -> Void)?
     
     init(libraryViewModel: LibraryViewModel, imageLoader: ImageLoaderProtocol) {
@@ -30,6 +31,7 @@ final class LibraryViewController: UIViewController {
         super.viewDidLoad()
         setupSegmentedControl()
         setupTableView()
+        setupEmptyStateLabel()
         bindViewModel()
     }
     
@@ -47,9 +49,18 @@ final class LibraryViewController: UIViewController {
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
+        tableView.backgroundView = emptyStateLabel
         tableView.dataSource = self
         tableView.delegate = self
         tableView.register(SavedBookCell.self, forCellReuseIdentifier: SavedBookCell.reuseIdentifier)
+    }
+    
+    private func setupEmptyStateLabel() {
+        emptyStateLabel.text = "No books in this section"
+        emptyStateLabel.font = .systemFont(ofSize: 17, weight: .semibold)
+        emptyStateLabel.textColor = .secondaryLabel
+        emptyStateLabel.textAlignment = .center
+        emptyStateLabel.numberOfLines = 0
     }
     
     private func setupSegmentedControl() {
@@ -131,6 +142,7 @@ final class LibraryViewController: UIViewController {
     private func handleState(state: SavedBookState) {
         switch state {
         case .loaded:
+            setEmptyStateVisible(libraryViewModel.displayedBooks.isEmpty)
             tableView.reloadData()
         case .changed(key: let key):
             guard let index = getBookIndexAt(key: key) else { return }
@@ -138,6 +150,14 @@ final class LibraryViewController: UIViewController {
             tableView.reloadRows(at: [indexPath], with: .none)
         case .error(let message):
             showErrorAlert(message: message)
+        }
+    }
+    
+    private func setEmptyStateVisible(_ isVisible: Bool) {
+        if !isVisible {
+            tableView.backgroundView?.isHidden = true
+        } else {
+            tableView.backgroundView?.isHidden = false
         }
     }
 }
