@@ -15,7 +15,7 @@ final class StatisticsViewModel {
     private(set) var wantToReadBooksCount = 0
     private(set) var readingBooksCount = 0
     private(set) var completedBooksCount = 0
-    private(set) var errorMassage: String?
+    private(set) var errorMessage: String?
     
     init(libraryStore: LibraryStoreProtocol) {
         self.libraryStore = libraryStore
@@ -28,9 +28,9 @@ final class StatisticsViewModel {
             updateWantToReadBooksCount()
             updateReadingBooksCount()
             updateCompletedBooksCount()
-            errorMassage = nil
+            errorMessage = nil
         } catch {
-            errorMassage = error.localizedDescription
+            errorMessage = error.localizedDescription
         }
     }
     

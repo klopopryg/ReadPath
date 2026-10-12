@@ -38,8 +38,8 @@ struct StatisticsView: View {
                     .font(.headline)
             }
             
-            if let errorMassage = statisticsViewModel.errorMassage {
-                Text(errorMassage)
+            if let errorMessage = statisticsViewModel.errorMessage {
+                Text(errorMessage)
                     .foregroundStyle(.red)
                 
                 Button("Refresh") {
