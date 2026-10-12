@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SwiftUI
 
 final class DependencyContainer {
     private let apiClient: APIClientProtocol
@@ -76,10 +77,12 @@ final class DependencyContainer {
         return bookDetailsViewController
     }
     
-    func makeStatisticsViewController() -> StatisticsViewController {
-        let statisticsViewController = StatisticsViewController()
-        statisticsViewController.title = "Statistics"
-        statisticsViewController.view.backgroundColor = .systemBackground
-        return statisticsViewController
+    func makeStatisticsViewController() -> UIViewController {
+        let statisticsViewModel = StatisticsViewModel(libraryStore: libraryStore)
+        let statisticsView = StatisticsView(statisticsViewModel: statisticsViewModel)
+        let hostingController = UIHostingController(rootView: statisticsView)
+        hostingController.title = "Statistics"
+        hostingController.view.backgroundColor = .systemBackground
+        return hostingController
     }
 }
