@@ -7,4 +7,7 @@
 
 enum TestError: Error {
     case loadingFailed
+    case deletionFailed
+    case statusChangeFailed
+    case savindFailed
 }

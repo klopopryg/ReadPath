@@ -13,10 +13,10 @@ struct StatisticsViewModelTests {
 
     @Test func refreshStatisticsUpdatesCountsForEachReadingStatus() {
         let fakeLibraryStore = FakeLibraryStore()
-        let wantToRead = SavedBook(key: "wantToRead", title: "wantToRead", coverID: nil, status: .wantToRead, addedAt: Date())
-        let readingFirst = SavedBook(key: "readingFirst", title: "", coverID: nil, status: .reading, addedAt: Date())
-        let readingSecond = SavedBook(key: "readingSecond", title: "", coverID: nil, status: .reading, addedAt: Date())
-        let completed = SavedBook(key: "completed", title: "", coverID: nil, status: .completed, addedAt: Date())
+        let wantToRead = makeBook(key: "wantToRead", status: .wantToRead)
+        let readingFirst = makeBook(key: "reading", status: .reading)
+        let readingSecond = makeBook(key: "reading", status: .reading)
+        let completed = makeBook(key: "completed", status: .completed)
         fakeLibraryStore.savedBooks = [wantToRead, readingFirst, readingSecond, completed]
         let viewModel = StatisticsViewModel(libraryStore: fakeLibraryStore)
         viewModel.refreshStatistics()
@@ -48,10 +48,10 @@ struct StatisticsViewModelTests {
     
     @Test func refreshStatisticsRecalculatesCountsWhenBooksChange() {
         let fakeLibraryStore = FakeLibraryStore()
-        let wantToRead = SavedBook(key: "wantToRead", title: "wantToRead", coverID: nil, status: .wantToRead, addedAt: Date())
-        let readingFirst = SavedBook(key: "readingFirst", title: "", coverID: nil, status: .reading, addedAt: Date())
-        let readingSecond = SavedBook(key: "readingSecond", title: "", coverID: nil, status: .reading, addedAt: Date())
-        let completed = SavedBook(key: "completed", title: "", coverID: nil, status: .completed, addedAt: Date())
+        let wantToRead = makeBook(key: "wantToRead", status: .wantToRead)
+        let readingFirst = makeBook(key: "reading", status: .reading)
+        let readingSecond = makeBook(key: "reading", status: .reading)
+        let completed = makeBook(key: "completed", status: .completed)
         fakeLibraryStore.savedBooks = [wantToRead, readingFirst, readingSecond, completed]
         let viewModel = StatisticsViewModel(libraryStore: fakeLibraryStore)
         viewModel.refreshStatistics()
