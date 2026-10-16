@@ -8,11 +8,11 @@
 import Foundation
 @testable import ReadPath
 
-func makeBook(key: String, status: ReadingStatus) -> SavedBook {
+func makeBook(key: String, status: ReadingStatus, coverID: Int? = nil) -> SavedBook {
     let savedBook = SavedBook(
         key: key,
         title: "",
-        coverID: nil,
+        coverID: coverID,
         status: status,
         addedAt: Date()
     )
