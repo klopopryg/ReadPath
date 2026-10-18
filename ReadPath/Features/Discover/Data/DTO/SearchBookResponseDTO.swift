@@ -10,7 +10,7 @@ struct SearchBooksResponseDTO: Decodable {
     let docs: [BookDTO]
 }
 
-struct BookDTO: Decodable {
+struct BookDTO: Decodable, Equatable {
     let authorName: [String]?
     let firstPublishYear: Int?
     let coverID: Int?

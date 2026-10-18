@@ -12,7 +12,7 @@ struct BooksPage {
     let total: Int
 }
 
-struct Book {
+struct Book: Equatable {
     let authorName: [String]?
     let firstPublishYear: Int?
     let coverURL: URL?
