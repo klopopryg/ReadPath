@@ -12,7 +12,6 @@ final class FakeLibraryStore: LibraryStoreProtocol {
     var error: TestError?
     
     func addBook(_ book: ReadPath.SavedBook) throws {
-
     }
     
     func loadBooks() throws {

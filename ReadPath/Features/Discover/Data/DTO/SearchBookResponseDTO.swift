@@ -5,7 +5,7 @@
 //  Created by Егор on 27.09.2026.
 //
 
-struct SearchBooksResponseDTO: Decodable {
+struct SearchBooksResponseDTO: Decodable, Equatable {
     let numFound: Int
     let docs: [BookDTO]
 }

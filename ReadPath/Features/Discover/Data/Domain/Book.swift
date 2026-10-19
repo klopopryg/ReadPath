@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct BooksPage {
+struct BooksPage: Equatable {
     let books: [Book]
     let total: Int
 }
