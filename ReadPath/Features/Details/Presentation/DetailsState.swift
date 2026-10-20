@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum DetailsState {
+enum DetailsState: Equatable {
     case loading
     case loaded(BookDetails)
     case error(String)

@@ -12,6 +12,10 @@ final class FakeLibraryStore: LibraryStoreProtocol {
     var error: TestError?
     
     func addBook(_ book: ReadPath.SavedBook) throws {
+        if let error {
+            throw error
+        }
+        savedBooks.append(book)
     }
     
     func loadBooks() throws {
