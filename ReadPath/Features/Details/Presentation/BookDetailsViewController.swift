@@ -19,6 +19,7 @@ final class BookDetailsViewController: UIViewController {
     private let subjectsLabel = UILabel()
     private let libraryActionButton = UIButton()
     private var stackView = UIStackView()
+    private let coverContainerView = UIView()
     private var loadTask: Task<Void, Never>?
     
     init(bookDetailsViewModel: BookDetailsViewModel, imageLoader: ImageLoaderProtocol) {
@@ -33,6 +34,7 @@ final class BookDetailsViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        view.backgroundColor = .systemBackground
         navigationItem.largeTitleDisplayMode = .never
         addSubViews()
         setupConstraints()
@@ -46,7 +48,8 @@ final class BookDetailsViewController: UIViewController {
         scrollView.addSubview(contentView)
         view.addSubview(activityIndicator)
         contentView.addSubview(stackView)
-        stackView.addArrangedSubview(imageView)
+        coverContainerView.addSubview(imageView)
+        stackView.addArrangedSubview(coverContainerView)
         stackView.addArrangedSubview(titleLabel)
         stackView.addArrangedSubview(descriptionLabel)
         stackView.addArrangedSubview(subjectsLabel)
@@ -58,6 +61,7 @@ final class BookDetailsViewController: UIViewController {
         contentView.translatesAutoresizingMaskIntoConstraints = false
         stackView.translatesAutoresizingMaskIntoConstraints = false
         activityIndicator.translatesAutoresizingMaskIntoConstraints = false
+        imageView.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
             scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
@@ -80,6 +84,9 @@ final class BookDetailsViewController: UIViewController {
             activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor),
             
+            imageView.centerXAnchor.constraint(equalTo: coverContainerView.centerXAnchor),
+            imageView.topAnchor.constraint(equalTo: coverContainerView.topAnchor),
+            imageView.bottomAnchor.constraint(equalTo: coverContainerView.bottomAnchor),
             imageView.widthAnchor.constraint(equalToConstant: 200),
             imageView.heightAnchor.constraint(equalTo: imageView.widthAnchor, multiplier: 1.5)
         ])
@@ -93,10 +100,21 @@ final class BookDetailsViewController: UIViewController {
         imageView.contentMode = .scaleAspectFit
         imageView.clipsToBounds = true
         
+        titleLabel.font = .preferredFont(forTextStyle: .title2)
+        titleLabel.textColor = .label
         titleLabel.numberOfLines = 0
-        titleLabel.font = .systemFont(ofSize: 21, weight: .bold)
+        titleLabel.adjustsFontForContentSizeCategory = true
+        
+        descriptionLabel.font = .preferredFont(forTextStyle: .body)
+        descriptionLabel.textColor = .label
+        descriptionLabel.textAlignment = .left
         descriptionLabel.numberOfLines = 0
+        descriptionLabel.adjustsFontForContentSizeCategory = true
+        
+        subjectsLabel.font = .preferredFont(forTextStyle: .footnote)
+        subjectsLabel.textColor = .secondaryLabel
         subjectsLabel.numberOfLines = 0
+        subjectsLabel.adjustsFontForContentSizeCategory = true
         
         var configuration = UIButton.Configuration.filled()
         configuration.cornerStyle = .medium
