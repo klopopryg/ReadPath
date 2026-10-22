@@ -9,6 +9,7 @@ import Testing
 @testable import ReadPath
 import Foundation
 
+@MainActor
 final class BookMappingTests {
     
     @Test func mapsBookDTOToBook() {
