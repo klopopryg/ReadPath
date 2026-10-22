@@ -56,10 +56,11 @@ final class DiscoverViewModel {
         }
     }
     
-    func search(query: String?) {
-        guard let query = query else { return }
+    @discardableResult
+    func search(query: String?) -> Task<Void, Never>? {
+        guard let query = query else { return nil }
         let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedQuery.isEmpty else { return }
+        guard !trimmedQuery.isEmpty else { return nil }
         searchTask?.cancel()
         paginationTask?.cancel()
         currentQuery = trimmedQuery
@@ -89,6 +90,7 @@ final class DiscoverViewModel {
                 onStateChanged?(.loadingError(error.localizedDescription))
             }
         }
+        return searchTask
     }
     
     func getBooksCount() -> Int {

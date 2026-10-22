@@ -5,7 +5,7 @@
 //  Created by Егор on 28.09.2026.
 //
 
-enum DiscoverState {
+enum DiscoverState: Equatable {
     case idle
     case loading
     case loaded
