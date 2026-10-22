@@ -19,6 +19,7 @@ final class DiscoverViewModel {
     }
     private var isLoadingMore = false
     private(set) var books: [Book] = []
+    private var searchID = UUID()
     private var searchTask: Task<Void, Never>?
     private var paginationTask: Task<Void, Never>?
     var onStateChanged: ((DiscoverState) -> Void)?
@@ -29,12 +30,15 @@ final class DiscoverViewModel {
     
     func loadNextPage() {
         guard let query = currentQuery, !isLoadingMore, hasMorePages else { return }
+        let requestSearchID = searchID
         let nextPageNumber = currentPage + 1
         isLoadingMore = true
         onStateChanged?(.loadingMore)
         paginationTask = Task {
             defer {
-                isLoadingMore = false
+                if requestSearchID == searchID {
+                    isLoadingMore = false
+                }
             }
             do {
                 let loadedNextPage = try await booksRepository.loadBooks(
@@ -61,6 +65,7 @@ final class DiscoverViewModel {
         guard let query = query else { return nil }
         let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedQuery.isEmpty else { return nil }
+        searchID = UUID()
         searchTask?.cancel()
         paginationTask?.cancel()
         currentQuery = trimmedQuery

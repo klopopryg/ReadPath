@@ -35,7 +35,8 @@ final class AppCoordinator {
         let discoverViewController = dependencyContainer.makeDiscoverViewController()
         let navigationController = UINavigationController(rootViewController: discoverViewController)
         navigationController.navigationBar.prefersLargeTitles = true
-        discoverViewController.onBookSelected = { [weak self] key in
+        discoverViewController.onBookSelected = { [weak self, weak navigationController] key in
+            guard let navigationController else { return }
             self?.showDetails(key: key, navigationControoler: navigationController)
         }
         return navigationController
@@ -45,7 +46,8 @@ final class AppCoordinator {
         let libraryViewController = dependencyContainer.makeLibraryViewController()
         let navigationController = UINavigationController(rootViewController: libraryViewController)
         navigationController.navigationBar.prefersLargeTitles = true
-        libraryViewController.onBookSelected = { [weak self] key in
+        libraryViewController.onBookSelected = { [weak self, weak libraryViewController] key in
+            guard let libraryViewController else { return }
             self?.showDetails(key: key, navigationControoler: navigationController)
         }
         return navigationController
